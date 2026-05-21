@@ -1,50 +1,61 @@
 package ru.android.anyweather
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.ViewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
-import retrofit2.Retrofit
-import retrofit2.converter.scalars.ScalarsConverterFactory
-import ru.android.anyweather.composables.AppWrapper
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.viewmodel.compose.viewModel
+import ru.android.anyweather.data.RetrofitBuilder
+import ru.android.anyweather.data.Utils
+import ru.android.anyweather.data.dataSources.AllCitiesRemoteDataSource
+import ru.android.anyweather.data.dataSources.CityRemoteDataSource
+import ru.android.anyweather.data.dataSources.WeatherRemoteDataSource
+import ru.android.anyweather.data.repositories.AllCitiesRepository
+import ru.android.anyweather.data.repositories.CityRepository
+import ru.android.anyweather.data.repositories.WeatherRepository
+import ru.android.anyweather.ui.composables.MainContent
 import ru.android.anyweather.ui.theme.AnyWeatherTheme
-
-const val METEO_BASE_URL = "https://api.open-meteo.com"
-const val NINJA_BASE_URL = "https://api.api-ninjas.com"
-
-val RETROFIT_METEO: Retrofit = Retrofit.Builder()
-    .baseUrl(METEO_BASE_URL)
-    .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
-    //.addConverterFactory(ScalarsConverterFactory.create())
-    .build()
-
-val RETROFIT_NINJA: Retrofit = Retrofit.Builder()
-    .baseUrl(NINJA_BASE_URL)
-    .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
-    //.addConverterFactory(ScalarsConverterFactory.create())
-    .build()
+import ru.android.anyweather.ui.viewModels.MainViewModel
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        RetrofitBuilder.initialize()
+
+        Utils.log("Started initializing repositories")
+
+        val cityRepository = CityRepository(
+            RetrofitBuilder.retrofitNinja,
+            CityRemoteDataSource::class.java
+        )
+
+        val weatherRepository = WeatherRepository(
+            RetrofitBuilder.retrofitMeteo,
+            WeatherRemoteDataSource::class.java
+        )
+
+        val allCitiesRepository = AllCitiesRepository(
+            RetrofitBuilder.retrofitAllCities,
+            AllCitiesRemoteDataSource::class.java
+        )
+
+        Utils.log("Successful initializing repositories!")
 
         enableEdgeToEdge()
         setContent {
             AnyWeatherTheme {
-                AppWrapper()
+                val viewModel : MainViewModel = viewModel(
+                    factory = MainViewModel.Factory(
+                        cityRepository,
+                        weatherRepository,
+                        allCitiesRepository
+                    )
+                )
+                MainContent(viewModel)
             }
         }
     }

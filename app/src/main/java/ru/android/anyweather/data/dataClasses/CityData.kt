@@ -1,4 +1,4 @@
-package ru.android.anyweather.dataClasses
+package ru.android.anyweather.data.dataClasses
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -1,11 +1,10 @@
-package ru.android.anyweather.dataSources
+package ru.android.anyweather.data.dataSources
 
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Query
-import retrofit2.http.QueryMap
 import ru.android.anyweather.PrivateConfig
-import ru.android.anyweather.dataClasses.CityData
+import ru.android.anyweather.data.dataClasses.CityData
 
 interface CityRemoteDataSource {
     @GET("v1/city")
